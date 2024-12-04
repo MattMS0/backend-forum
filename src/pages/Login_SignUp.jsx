@@ -90,34 +90,6 @@ function App({setToken}) {
     }
   };
   
-  const handleSignIn = async (e) => {
-    e.preventDefault();
-  
-    try {
-      // Busca o usuário na tabela personalizada
-      const { data: user, error } = await supabase
-        .from('usuario')
-        .select('senha_hash, permissao')
-        .eq('email', formDataSignIn.email)
-        .single();
-  
-      if (error || !user) {
-        throw new Error('Usuário não encontrado ou senha incorreta.');
-      }
-  
-      // Compara a senha fornecida com o hash armazenado
-      const isMatch = bcrypt.compareSync(formDataSignIn.password, user.senha_hash);
-  
-      if (!isMatch) {
-        throw new Error('Senha incorreta.');
-      }
-  
-      alert('Login realizado com sucesso!');
-    } catch (error) {
-      alert(error.message);
-    }
-  };
-  
 
   // NÃO UTILIZADA - Função para fazer login
   // const handleSignIn = async (e) => {
@@ -139,6 +111,7 @@ function App({setToken}) {
     e.preventDefault();
   
     try {
+      // Faz login no Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formDataSignIn.email,
         password: formDataSignIn.password,
@@ -146,21 +119,22 @@ function App({setToken}) {
   
       if (error) throw error;
   
-      // Obter a permissão do usuário da tabela personalizada
-      const { data: userRole, error: roleError } = await supabase
-        .from('usuario')
-        .select('permissao')
+      // Busca os dados do usuário na tabela personalizada
+      const { data: userInfo, error: userError } = await supabase
+        .from('usuario') // Nome da sua tabela personalizada
+        .select('permissao, username') // Seleciona permissao e username
         .eq('email', formDataSignIn.email)
         .single();
   
-      if (roleError) throw roleError;
+      if (userError) throw userError;
   
-      // Inclui o papel no token
+      // Atualiza o token com os dados do usuário da tabela personalizada
       setToken({
         ...data,
         user: {
           ...data.user,
-          role: userRole.permissao, // Atribui o papel
+          role: userInfo.permissao, // Adiciona o papel
+          username: userInfo.username, // Adiciona o username
         },
       });
   
@@ -169,6 +143,7 @@ function App({setToken}) {
       alert(error.message);
     }
   }
+  
   
 
   return (

@@ -44,7 +44,7 @@ const HomePage = ({ token }) => {
         <div className="logoH">JD JUSTICA</div>
         <nav>
           <h3 className="h3H">
-            Boas vindas, {token?.user?.user_metadata?.fullname || 'Visitante'}
+            Boas vindas, {token?.user?.username || 'Visitante'}
           </h3>
           <ul>
             <li>Leis</li>
