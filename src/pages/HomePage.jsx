@@ -6,15 +6,12 @@ import '../styles.css';
 
 const HomePage = ({ token }) => {
   const navigate = useNavigate();
-
-  // Estados para o CRUD
   const [post, setPost] = useState([]);
-  const [showAddPost, setShowAddPost] = useState(false); // Estado para exibir formulário de adição
-  const [newPost, setNewPost] = useState({ titulo: '', descricao: '' });
 
   useEffect(() => {
     fetchPost();
-  }, []);
+    console.log('Token: ', token);
+  }, [token]);
 
   async function fetchPost() {
     const { data } = await supabase.from('post').select('*');
@@ -26,24 +23,13 @@ const HomePage = ({ token }) => {
     navigate('/');
   }
 
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setNewPost((prev) => ({ ...prev, [name]: value }));
-  }
-
-  async function criarPost(event) {
-    event.preventDefault();
-    const dataAtual = new Date().toISOString();
-    await supabase
-      .from('post')
-      .insert({ ...newPost, data_postagem: dataAtual });
-    fetchPost();
-    setShowAddPost(false); // Fecha o formulário após adicionar
-    setNewPost({ titulo: '', descricao: '' });
-  }
-
-  function handleEdit(postId) {
-    navigate(`/edit/${postId}`); // Redireciona para a página de edição
+  async function deletarPost(postId) {
+    const { error } = await supabase.from('post').delete().eq('id_post', postId);
+    if (error) {
+      console.error("Erro ao deletar o post:", error.message);
+      return;
+    }
+    fetchPost(); // Atualiza a lista de posts
   }
 
   const formatarParaBrasilia = (utcTimestamp) => {
@@ -51,12 +37,6 @@ const HomePage = ({ token }) => {
       .setZone('America/Sao_Paulo')
       .toLocaleString(DateTime.DATETIME_MED);
   };
-
-
-  function handleEdit(postId) {
-    navigate(`/edit/${postId}`); // Redireciona para a página de edição
-  }
-
 
   return (
     <div className="containerH">
@@ -87,31 +67,11 @@ const HomePage = ({ token }) => {
         <header>
           <h1>Leis</h1>
           {token && (
-            <button className='add-post-button' onClick={() => ((navigate)('/add'))}>
+            <button className="add-post-button" onClick={() => navigate('/add')}>
               Adicionar Post
             </button>
           )}
         </header>
-
-        {showAddPost && (
-          <form onSubmit={criarPost}>
-            <input
-              type="text"
-              placeholder="Título"
-              name="titulo"
-              value={newPost.titulo}
-              onChange={handleChange}
-            />
-            <input
-              type="text"
-              placeholder="Descrição"
-              name="descricao"
-              value={newPost.descricao}
-              onChange={handleChange}
-            />
-            <button type="submit">Criar</button>
-          </form>
-        )}
 
         <section className="articlesH">
           {post.map((item) => (
@@ -123,13 +83,20 @@ const HomePage = ({ token }) => {
                 <span>#Atualizado</span>
               </div>
               <div className="card-footerH">
-                <span>{formatarParaBrasilia(item.data_postagem)}</span>
+                <span>
+                  Criado: {formatarParaBrasilia(item.data_postagem)}
+                </span>
+                {item.data_ultima_atualizacao && (
+                  <span>
+                    Atualizado: {formatarParaBrasilia(item.data_ultima_atualizacao)}
+                  </span>
+                )}
                 {token && (
                   <>
-                    <button className= 'button-ed'onClick={() => handleEdit(item.id_post)}>
+                    <button className="button-ed" onClick={() => navigate(`/edit/${item.id_post}`)}>
                       Editar
                     </button>
-                    <button className= 'button-ed'onClick={() => deletarPost(item.id_post)}>
+                    <button className="button-ed" onClick={() => deletarPost(item.id_post)}>
                       Deletar
                     </button>
                   </>

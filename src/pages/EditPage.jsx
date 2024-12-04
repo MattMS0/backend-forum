@@ -3,10 +3,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import ReactQuill from 'react-quill'; // Importando o Quill
+import 'react-quill/dist/quill.snow.css'; // Estilo básico para o Quill
 
-const EditPage = ({ token }) => {
+const EditPage = () => {
   const navigate = useNavigate();
-  const { postId } = useParams(); // Captura o ID do post da URL
+  const { postId } = useParams();
   const [postEdit, setPostEdit] = useState({ titulo: '', descricao: '' });
 
   useEffect(() => {
@@ -36,11 +38,15 @@ const EditPage = ({ token }) => {
     setPostEdit((prev) => ({ ...prev, [name]: value }));
   }
 
+  function handleEditorChange(value) {
+    setPostEdit((prev) => ({ ...prev, descricao: value })); // Atualiza a descrição
+  }
+
   return (
     <div className="edit-page-container">
       <header className="edit-header">
         <button className="back-button" onClick={() => navigate(-1)}>
-          <FontAwesomeIcon icon={faArrowLeft} /> {/* Ícone de voltar */}
+          <FontAwesomeIcon icon={faArrowLeft} />
         </button>
         <h1>Editar Post</h1>
       </header>
@@ -53,12 +59,13 @@ const EditPage = ({ token }) => {
           value={postEdit.titulo}
           onChange={handleChange}
         />
-        <textarea
-          name="descricao"
-          placeholder="Descrição"
+        <ReactQuill
+          theme="snow"
           value={postEdit.descricao}
-          onChange={handleChange}
-        ></textarea>
+          onChange={handleEditorChange}
+          placeholder="Descrição"
+          className="descricao-editor"
+        />
         <button type="submit">Salvar Alterações</button>
       </form>
     </div>

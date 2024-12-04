@@ -3,14 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../client';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import ReactQuill from 'react-quill'; // Importando o Quill
+import 'react-quill/dist/quill.snow.css'; // Estilo básico para o Quill
 
-const AddPage = ({ token }) => {
+const AddPage = () => {
   const navigate = useNavigate();
   const [newPost, setNewPost] = useState({ titulo: '', descricao: '' });
 
   function handleChange(event) {
     const { name, value } = event.target;
     setNewPost((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleEditorChange(value) {
+    setNewPost((prev) => ({ ...prev, descricao: value })); // Atualiza o conteúdo da descrição
   }
 
   async function criarPost(event) {
@@ -39,13 +45,14 @@ const AddPage = ({ token }) => {
           value={newPost.titulo}
           onChange={handleChange}
         />
-        <textarea
-          name="descricao"
-          placeholder="Descrição"
+        <ReactQuill
+          theme="snow"
           value={newPost.descricao}
-          onChange={handleChange}
-        ></textarea>
-        <button type="submit">Adicionar Post</button>
+          onChange={handleEditorChange}
+          placeholder="Descrição"
+          className="descricao-editor"
+        />
+        <button type="submit" style={{ marginTop: '30px'}}>Adicionar Post</button>
       </form>
     </div>
   );
