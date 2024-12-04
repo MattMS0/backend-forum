@@ -38,6 +38,13 @@ const HomePage = ({ token }) => {
       .toLocaleString(DateTime.DATETIME_MED);
   };
 
+  // Função para remover tags HTML
+  function stripHtml(html) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
+  }
+
   return (
     <div className="containerH">
       <aside className="sidebarH">
@@ -77,7 +84,7 @@ const HomePage = ({ token }) => {
           {post.map((item) => (
             <article className="cardH" key={item.id_post}>
               <h2>{item.titulo}</h2>
-              <p>{item.descricao}</p>
+              <p>{stripHtml(item.descricao)}</p> {/* Exibe apenas o texto puro */}
               <div className="tagsH">
                 <span>#Postagem</span>
                 <span>#Atualizado</span>
