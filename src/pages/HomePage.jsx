@@ -66,7 +66,7 @@ const HomePage = ({ token }) => {
       <main className="contentH">
         <header>
           <h1>Leis</h1>
-          {token && (
+          {token?.user?.role === 'admin' && (
             <button className="add-post-button" onClick={() => navigate('/add')}>
               Adicionar Post
             </button>
@@ -91,7 +91,7 @@ const HomePage = ({ token }) => {
                     Atualizado: {formatarParaBrasilia(item.data_ultima_atualizacao)}
                   </span>
                 )}
-                {token && (
+                {token?.user?.role === 'admin' && (
                   <>
                     <button className="button-ed" onClick={() => navigate(`/edit/${item.id_post}`)}>
                       Editar

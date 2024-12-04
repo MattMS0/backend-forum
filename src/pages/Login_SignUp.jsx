@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import '../styles.css';
 import { supabase } from '../client';
 import { useNavigate } from 'react-router-dom';
+import bcrypt from 'bcryptjs'
+
 
 function App({setToken}) {
   let navigate = useNavigate()
@@ -47,21 +49,75 @@ function App({setToken}) {
   // Função para registrar um usuário
   const handleSignUp = async (e) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signUp({
-      email: formDataSignUp.email,
-      password: formDataSignUp.password,
-      options: {
-        data: {
-          fullName: formDataSignUp.fullName
-        }
+  
+    try {
+      // Cria o hash da senha
+      const hashedPassword = bcrypt.hashSync(formDataSignUp.password, 10);
+  
+      // Cria o usuário no Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: formDataSignUp.email,
+        password: formDataSignUp.password,
+        options: {
+          data: {
+            fullName: formDataSignUp.fullName,
+          },
+        },
+      });
+  
+      if (error) {
+        throw new Error('Erro no cadastro: ' + error.message);
       }
-    });
-    if (error) {
-      alert('Erro no cadastro: ' + error.message);
-    } else {
+  
+      // Insere os dados do usuário na tabela personalizada
+      const { error: insertError } = await supabase
+        .from('usuario')
+        .insert({
+          email: formDataSignUp.email,
+          nome_completo: formDataSignUp.fullName,
+          senha_hash: hashedPassword, // Armazena o hash da senha
+          data_cadastro: new Date(),
+          permissao: 'viewer', // Define a permissão padrão
+        });
+  
+      if (insertError) {
+        throw new Error('Erro ao inserir na tabela personalizada: ' + insertError.message);
+      }
+  
       alert('Usuário cadastrado com sucesso!');
+    } catch (error) {
+      alert(error.message);
     }
   };
+  
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+  
+    try {
+      // Busca o usuário na tabela personalizada
+      const { data: user, error } = await supabase
+        .from('usuario')
+        .select('senha_hash, permissao')
+        .eq('email', formDataSignIn.email)
+        .single();
+  
+      if (error || !user) {
+        throw new Error('Usuário não encontrado ou senha incorreta.');
+      }
+  
+      // Compara a senha fornecida com o hash armazenado
+      const isMatch = bcrypt.compareSync(formDataSignIn.password, user.senha_hash);
+  
+      if (!isMatch) {
+        throw new Error('Senha incorreta.');
+      }
+  
+      alert('Login realizado com sucesso!');
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+  
 
   // NÃO UTILIZADA - Função para fazer login
   // const handleSignIn = async (e) => {
@@ -80,25 +136,40 @@ function App({setToken}) {
   // };
 
   async function handleSubmitSignIn(e) {
-    e.preventDefault()
-
+    e.preventDefault();
+  
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formDataSignIn.email,
         password: formDataSignIn.password,
-      })
-      
-      if (error) throw error
-      console.log(data)
-      alert('Login realizado com sucesso!');
-      setToken(data)
-      navigate('/home')
-
+      });
+  
+      if (error) throw error;
+  
+      // Obter a permissão do usuário da tabela personalizada
+      const { data: userRole, error: roleError } = await supabase
+        .from('usuario')
+        .select('permissao')
+        .eq('email', formDataSignIn.email)
+        .single();
+  
+      if (roleError) throw roleError;
+  
+      // Inclui o papel no token
+      setToken({
+        ...data,
+        user: {
+          ...data.user,
+          role: userRole.permissao, // Atribui o papel
+        },
+      });
+  
+      navigate('/home');
     } catch (error) {
-      alert(error)
+      alert(error.message);
     }
-    
   }
+  
 
   return (
     <div className={`container ${isSignUpMode ? "sign-up-mode" : ""}`}>
@@ -134,12 +205,18 @@ function App({setToken}) {
               />
             </div>
             <input type="submit" value="Entrar" className="btn solid" />
-            <p className="social-text">Entre com o Google</p>
-            <div className="social-media">
-              <a href="#" className="social-icon">
-                <i className="fab fa-google"></i>
-              </a>
-            </div>
+            <button
+              type="button"
+              className="btn-visitor"
+              onClick={() => {
+                sessionStorage.setItem("role", "visitor");
+                window.location.href = "/home";
+              }}
+              style={{ marginTop: "10px" }}
+            >
+              Continuar como Visitante
+            </button>
+
           </form>
 
           {/* Formulário de Cadastro */}
@@ -195,7 +272,7 @@ function App({setToken}) {
         <div className="panel left-panel">
           <div className="content">
             <h3>Novo por aqui?</h3>
-            <p>Informa-se, defenda-se, consuma com consciência.</p>
+            <p>Informe-se, defenda-se, e consuma com consciência.</p>
             <button className="btn transparent" onClick={() => setIsSignUpMode(true)}>
               Cadastre-se
             </button>
@@ -205,7 +282,7 @@ function App({setToken}) {
         <div className="panel right-panel">
           <div className="content">
             <h3>Já tem uma conta?</h3>
-            <p>Informa-se, defenda-se, consuma com consciência.</p>
+            <p>Informe-se, defenda-se e consuma com consciência.</p>
             <button className="btn transparent" onClick={() => setIsSignUpMode(false)}>
               Entrar
             </button>

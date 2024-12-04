@@ -963,3 +963,22 @@ form button:hover {
   }
 }
 
+/* BOTÃO VISITANTE */
+.btn-visitor {
+  background: none;
+  border: 2px solid #4caf50; /* Verde consistente */
+  color: #4caf50; /* Texto verde */
+  text-transform: uppercase;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 25px;
+  transition: all 0.3s ease-in-out;
+
+}
+
+.btn-visitor:hover {
+  background-color: #4caf50; /* Verde de hover */
+  color: #fff; /* Texto branco no hover */
+}
+

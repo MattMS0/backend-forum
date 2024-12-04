@@ -20,13 +20,14 @@ const App = () => {
     <div>
       <Routes>
         <Route path="/" element={<Login_SignUp setToken={setToken} />} />
-        {token && (
+        <Route path="/home" element={<HomePage token={token} />} />
+        {token?.user?.role === 'admin' && (
           <>
-            <Route path="/home" element={<HomePage token={token} />} />
             <Route path="/edit/:postId" element={<EditPage token={token} />} />
             <Route path="/add" element={<AddPage token={token} />} />
           </>
         )}
+
       </Routes>
     </div>
   );
