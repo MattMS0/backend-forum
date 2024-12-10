@@ -14,7 +14,7 @@ function App({setToken}) {
   //const [username, setUsername] = useState('');
 
   const [formDataSignUp,setFormDataSignUp] = useState({
-    fullName:'', email:'', password:''
+    userName:'', email:'', password:''
   })
 
   const [formDataSignIn,setFormDataSignIn] = useState({
@@ -60,7 +60,7 @@ function App({setToken}) {
         password: formDataSignUp.password,
         options: {
           data: {
-            fullName: formDataSignUp.fullName,
+            username: formDataSignUp.userName,
           },
         },
       });
@@ -74,7 +74,7 @@ function App({setToken}) {
         .from('usuario')
         .insert({
           email: formDataSignUp.email,
-          nome_completo: formDataSignUp.fullName,
+          username: formDataSignUp.userName,
           senha_hash: hashedPassword, // Armazena o hash da senha
           data_cadastro: new Date(),
           permissao: 'viewer', // Define a permissão padrão
@@ -204,7 +204,7 @@ function App({setToken}) {
               <input 
               type="text" 
               placeholder="Usuário"
-              name='fullName'
+              name='userName'
               onChange={handleChangeSignUp} />
             </div>
             

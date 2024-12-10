@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../client';
 import { DateTime } from 'luxon';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHeart } from '@fortawesome/free-solid-svg-icons';
 import '../styles.css';
 
 const HomePage = ({ token }) => {
   const navigate = useNavigate();
   const [post, setPost] = useState([]);
+
 
   useEffect(() => {
     fetchPost();
@@ -43,7 +46,7 @@ const HomePage = ({ token }) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     return tempDiv.textContent || tempDiv.innerText || '';
-  }
+  }  
 
   return (
     <div className="containerH">
@@ -65,7 +68,7 @@ const HomePage = ({ token }) => {
             {token && <li>Suas perguntas</li>}
             {token && <li>Suas respostas</li>}
             {token && <li>Curtidas e comentários</li>}
-            <li onClick={handleLogout}>Logout</li>
+            <li onClick={handleLogout}>Sair</li>
           </ul>
         </div>
       </aside>
@@ -90,12 +93,13 @@ const HomePage = ({ token }) => {
                 <span>#Atualizado</span>
               </div>
               <div className="card-footerH">
-                <span>
-                  Criado: {formatarParaBrasilia(item.data_postagem)}
-                </span>
-                {item.data_ultima_atualizacao && (
+                {item.data_ultima_atualizacao ? (
                   <span>
                     Atualizado: {formatarParaBrasilia(item.data_ultima_atualizacao)}
+                  </span>
+                ) : (
+                  <span>
+                    Criado: {formatarParaBrasilia(item.data_postagem)}
                   </span>
                 )}
                 {token?.user?.role === 'admin' && (
