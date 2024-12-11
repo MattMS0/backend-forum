@@ -989,3 +989,18 @@ form button:hover {
   color: #fff; /* Texto branco no hover */
 }
 
+/* Botão de Ler Mais */
+.read-more-button {
+  background: none;
+  color: #007bff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.read-more-button:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}

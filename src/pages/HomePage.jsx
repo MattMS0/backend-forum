@@ -149,7 +149,15 @@ const HomePage = ({ token }) => {
           {post.map((item) => (
             <article className="cardH" key={item.id_post}>
               <h2>{item.titulo}</h2>
-              <p>{stripHtml(item.descricao)}</p>
+              <p>
+                {stripHtml(item.descricao).slice(0, 80)}...
+                <button
+                  className="read-more-button"
+                  onClick={() => navigate(`/details/${item.id_post}`)}
+                >
+                  Leia Mais
+                </button>
+              </p>
               <div className="tagsH">
                 <span>#Postagem</span>
                 <span>#Atualizado</span>
