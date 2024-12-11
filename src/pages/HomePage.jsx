@@ -126,7 +126,7 @@ const HomePage = ({ token }) => {
   return (
     <div className="containerH">
       <aside className="sidebarH">
-        <div className="logoH">JD JUSTICA</div>
+        <div className="logoH">Portal do Consumidor</div>
         <nav>
           <h3 className="h3H">
             Boas vindas, {token?.user?.username || 'Visitante'}
@@ -140,9 +140,8 @@ const HomePage = ({ token }) => {
         <div className="personal-navigationH">
           <h4>NAVEGAÇÃO PESSOAL</h4>
           <ul>
-            {token && <li>Suas perguntas</li>}
-            {token && <li>Suas respostas</li>}
-            {token && <li>Curtidas e comentários</li>}
+            {token && <li>Minhas curtidas</li>}
+            {token && <li>Meus comentários</li>}
             <li onClick={handleLogout}>Sair</li>
           </ul>
         </div>
