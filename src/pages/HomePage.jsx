@@ -10,6 +10,7 @@ const HomePage = ({ token }) => {
   const navigate = useNavigate();
   const [post, setPost] = useState([]);
   const [userLikes, setUserLikes] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para o termo de busca
 
   useEffect(() => {
     fetchPost();
@@ -18,6 +19,7 @@ const HomePage = ({ token }) => {
     }
   }, [token]);
 
+  // Função para buscar os posts
   async function fetchPost() {
     try {
       const { data: posts, error: postError } = await supabase.from('post').select('*');
@@ -37,6 +39,7 @@ const HomePage = ({ token }) => {
     }
   }
 
+  // Função para buscar os likes do usuário
   async function fetchUserLikes() {
     const { data, error } = await supabase
       .from('likes')
@@ -49,6 +52,7 @@ const HomePage = ({ token }) => {
     setUserLikes(data.map((like) => like.post_id));
   }
 
+  // Função para alternar curtidas
   async function toggleLike(postId) {
     try {
       const isLiked = userLikes.includes(postId);
@@ -85,6 +89,7 @@ const HomePage = ({ token }) => {
     }
   }
 
+  // Função para deletar post
   async function deletarPost(postId) {
     const { error } = await supabase.from('post').delete().eq('id_post', postId);
     if (error) {
@@ -94,6 +99,7 @@ const HomePage = ({ token }) => {
     fetchPost();
   }
 
+  // Função de logout
   function handleLogout() {
     sessionStorage.removeItem('token');
     navigate('/');
@@ -104,6 +110,13 @@ const HomePage = ({ token }) => {
       .setZone('America/Sao_Paulo')
       .toLocaleString(DateTime.DATETIME_MED);
 
+  // Função para filtrar posts pelo título ou descrição com base no termo de busca
+  const filteredPosts = post.filter((item) =>
+    item.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Função para remover tags HTML
   function stripHtml(html) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
@@ -143,10 +156,18 @@ const HomePage = ({ token }) => {
               Adicionar Post
             </button>
           )}
+          {/* Campo de busca */}
+          <input
+            type="text"
+            placeholder="Buscar posts..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </header>
 
         <section className="articlesH">
-          {post.map((item) => (
+          {filteredPosts.map((item) => (
             <article className="cardH" key={item.id_post}>
               <h2>{item.titulo}</h2>
               <p>

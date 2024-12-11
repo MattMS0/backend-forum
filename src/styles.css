@@ -1027,3 +1027,18 @@ form button:hover {
   color: #333;               /* Cor do texto */
   margin-top: 10px;          /* Margem superior */
 }
+
+/* Estilo para o campo de busca */
+.search-input {
+  width: 300px;               /* Largura do campo de pesquisa */
+  padding: 8px;               /* Preenchimento interno */
+  font-size: 16px;            /* Tamanho da fonte */
+  margin-bottom: 20px;        /* Espaço inferior */
+  border-radius: 4px;         /* Borda arredondada */
+  border: 1px solid #ccc;    /* Cor da borda */
+  outline: none;              /* Remove a borda de foco */
+}
+
+.search-input:focus {
+  border-color: #007bff;      /* Cor da borda quando o campo estiver em foco */
+}
