@@ -40,7 +40,7 @@ const PostDetails = () => {
         {post ? (
           <article className="cardH">
             <h1>{post.titulo}</h1>
-            <p>{stripHtml(post.descricao)}</p>
+            <p className="post-content">{stripHtml(post.descricao)}</p>
             <button className="back-button" onClick={() => navigate(-1)}>
               Voltar
             </button>

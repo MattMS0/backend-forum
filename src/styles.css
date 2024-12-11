@@ -545,6 +545,7 @@ form.sign-in-form {
 
 /* Articles Section Styles */
 .articlesH {
+  width: 600px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1003,4 +1004,26 @@ form button:hover {
 .read-more-button:hover {
   color: #0056b3;
   text-decoration: underline;
+}
+
+/* Quebra de linha e ajuste do texto */
+.cardH p {
+  white-space: pre-wrap;  /* Preserva quebras de linha */
+  word-wrap: break-word;  /* Quebra palavras longas */
+  line-height: 1.6;
+  font-size: 16px;
+  color: #333;
+  margin-top: 10px;
+}
+
+.post-content {
+  width: 1420px;              /* Largura fixa */
+  padding: 20px;             /* Espaçamento interno */
+  overflow-y: auto;          /* Permite rolagem se o conteúdo ultrapassar */
+  white-space: pre-wrap;     /* Mantém quebras de linha no conteúdo */
+  word-break: break-word;    /* Quebra palavras longas */
+  line-height: 1.6;          /* Espaçamento entre as linhas */
+  font-size: 16px;           /* Tamanho da fonte */
+  color: #333;               /* Cor do texto */
+  margin-top: 10px;          /* Margem superior */
 }

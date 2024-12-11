@@ -150,7 +150,7 @@ const HomePage = ({ token }) => {
             <article className="cardH" key={item.id_post}>
               <h2>{item.titulo}</h2>
               <p>
-                {stripHtml(item.descricao).slice(0, 80)}...
+                {stripHtml(item.descricao).slice(0, 160)}...
                 <button
                   className="read-more-button"
                   onClick={() => navigate(`/details/${item.id_post}`)}
