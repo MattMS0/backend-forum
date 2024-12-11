@@ -9,32 +9,23 @@ import '../styles.css';
 const HomePage = ({ token }) => {
   const navigate = useNavigate();
   const [post, setPost] = useState([]);
-  const [userLikes, setUserLikes] = useState([]); // Armazena os likes do usuário atual
+  const [userLikes, setUserLikes] = useState([]);
 
   useEffect(() => {
     fetchPost();
     if (token?.user) {
-      fetchUserLikes(); // Busca os likes do usuário atual
+      fetchUserLikes();
     }
   }, [token]);
 
-  // Função para buscar posts e contar likes usando a função RPC
   async function fetchPost() {
     try {
-      // Consulta todos os posts
-      const { data: posts, error: postError } = await supabase
-        .from('post')
-        .select('*');
-
+      const { data: posts, error: postError } = await supabase.from('post').select('*');
       if (postError) throw postError;
 
-      // Consulta RPC para contar likes de maneira pública
-      const { data: likesData, error: likesError } = await supabase
-        .rpc('count_likes');
-
+      const { data: likesData, error: likesError } = await supabase.rpc('count_likes');
       if (likesError) throw likesError;
 
-      // Combina os likes com os posts
       const postsWithLikes = posts.map((post) => ({
         ...post,
         likes: likesData.find((like) => like.post_id === post.id_post)?.like_count || 0,
@@ -46,66 +37,46 @@ const HomePage = ({ token }) => {
     }
   }
 
-
-  // Função para buscar os likes do usuário atual
   async function fetchUserLikes() {
     const { data, error } = await supabase
       .from('likes')
       .select('post_id')
-      .eq('user_id', token.user.id); // Busca os likes pelo ID do usuário
+      .eq('user_id', token.user.id);
     if (error) {
       console.error('Erro ao buscar likes do usuário:', error.message);
       return;
     }
-    // Extrai os IDs dos posts curtidos
     setUserLikes(data.map((like) => like.post_id));
   }
 
-  // Função para alternar curtida
   async function toggleLike(postId) {
     try {
-      const isLiked = userLikes.includes(postId); // Verifica se o post já foi curtido
+      const isLiked = userLikes.includes(postId);
 
       if (isLiked) {
-        // Se já curtiu, remove o like
         const { error: deleteError } = await supabase
           .from('likes')
           .delete()
           .eq('user_id', token.user.id)
           .eq('post_id', postId);
+        if (deleteError) throw deleteError;
 
-        if (deleteError) {
-          console.error(deleteError.message);
-          return;
-        }
-
-        // Atualiza o estado local
         setUserLikes((prev) => prev.filter((id) => id !== postId));
         setPost((prevPosts) =>
           prevPosts.map((post) =>
-            post.id_post === postId
-              ? { ...post, likes: post.likes - 1 }
-              : post
+            post.id_post === postId ? { ...post, likes: post.likes - 1 } : post
           )
         );
       } else {
-        // Se não curtiu, adiciona o like
         const { error: insertError } = await supabase
           .from('likes')
           .insert({ user_id: token.user.id, post_id: postId });
+        if (insertError) throw insertError;
 
-        if (insertError) {
-          console.error(insertError.message);
-          return;
-        }
-
-        // Atualiza o estado local
         setUserLikes((prev) => [...prev, postId]);
         setPost((prevPosts) =>
           prevPosts.map((post) =>
-            post.id_post === postId
-              ? { ...post, likes: post.likes + 1 }
-              : post
+            post.id_post === postId ? { ...post, likes: post.likes + 1 } : post
           )
         );
       }
@@ -114,18 +85,25 @@ const HomePage = ({ token }) => {
     }
   }
 
+  async function deletarPost(postId) {
+    const { error } = await supabase.from('post').delete().eq('id_post', postId);
+    if (error) {
+      console.error('Erro ao deletar o post:', error.message);
+      return;
+    }
+    fetchPost();
+  }
+
   function handleLogout() {
     sessionStorage.removeItem('token');
     navigate('/');
   }
 
-  const formatarParaBrasilia = (utcTimestamp) => {
-    return DateTime.fromISO(utcTimestamp, { zone: 'utc' })
+  const formatarParaBrasilia = (utcTimestamp) =>
+    DateTime.fromISO(utcTimestamp, { zone: 'utc' })
       .setZone('America/Sao_Paulo')
       .toLocaleString(DateTime.DATETIME_MED);
-  };
 
-  // Função para remover tags HTML
   function stripHtml(html) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
@@ -177,45 +155,43 @@ const HomePage = ({ token }) => {
                 <span>#Atualizado</span>
               </div>
               <div className="card-footerH">
-                {item.data_ultima_atualizacao ? (
-                  <span>
-                    Atualizado: {formatarParaBrasilia(item.data_ultima_atualizacao)}
-                  </span>
-                ) : (
-                  <span>
-                    Criado: {formatarParaBrasilia(item.data_postagem)}
-                  </span>
-                )}
-                {token ? (
-                  <span
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => toggleLike(item.id_post)}
-                  >
-                    <FontAwesomeIcon
-                      icon={faHeart}
-                      style={{
-                        color: userLikes.includes(item.id_post)
-                          ? 'red'
-                          : 'gray',
-                        marginRight: '5px',
-                      }}
-                    />
-                    {item.likes || 0}
-                  </span>
-                ) : (
-                  <span>
-                    <FontAwesomeIcon
-                      icon={faHeart}
-                      style={{ color: 'gray', marginRight: '5px' }}
-                    />
-                    {item.likes || 0}
-                  </span>
-                )}
-                {token && (
-                  <span>
-                    <FontAwesomeIcon icon={faComment} style={{ marginRight: '5px' }} />
-                    {item.quantidade_comentarios || 0}
-                  </span>
+                <span>
+                  {item.data_ultima_atualizacao
+                    ? `Atualizado: ${formatarParaBrasilia(item.data_ultima_atualizacao)}`
+                    : `Criado: ${formatarParaBrasilia(item.data_postagem)}`}
+                </span>
+                <span
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => toggleLike(item.id_post)}
+                >
+                  <FontAwesomeIcon
+                    icon={faHeart}
+                    style={{
+                      color: userLikes.includes(item.id_post) ? 'red' : 'gray',
+                      marginRight: '5px',
+                    }}
+                  />
+                  {item.likes || 0}
+                </span>
+                <span>
+                  <FontAwesomeIcon icon={faComment} style={{ marginRight: '5px' }} />
+                  {item.quantidade_comentarios || 0}
+                </span>
+                {token?.user?.role === 'admin' && (
+                  <>
+                    <button
+                      className="button-ed"
+                      onClick={() => navigate(`/edit/${item.id_post}`)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      className="button-ed"
+                      onClick={() => deletarPost(item.id_post)}
+                    >
+                      Deletar
+                    </button>
+                  </>
                 )}
               </div>
             </article>
