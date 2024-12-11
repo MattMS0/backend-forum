@@ -54,8 +54,8 @@ function App({setToken}) {
       // Cria o hash da senha
       const hashedPassword = bcrypt.hashSync(formDataSignUp.password, 10);
   
-      // Cria o usuário no Supabase
-      const { data, error } = await supabase.auth.signUp({
+      // Cria o usuário no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formDataSignUp.email,
         password: formDataSignUp.password,
         options: {
@@ -65,8 +65,8 @@ function App({setToken}) {
         },
       });
   
-      if (error) {
-        throw new Error('Erro no cadastro: ' + error.message);
+      if (authError) {
+        throw new Error('Erro no cadastro: ' + authError.message);
       }
   
       // Insere os dados do usuário na tabela personalizada
@@ -75,7 +75,7 @@ function App({setToken}) {
         .insert({
           email: formDataSignUp.email,
           username: formDataSignUp.userName,
-          senha_hash: hashedPassword, // Armazena o hash da senha
+          senha_hash: hashedPassword,
           data_cadastro: new Date(),
           permissao: 'viewer', // Define a permissão padrão
         });
@@ -89,6 +89,7 @@ function App({setToken}) {
       alert(error.message);
     }
   };
+  
   
 
   // NÃO UTILIZADA - Função para fazer login
@@ -111,38 +112,46 @@ function App({setToken}) {
     e.preventDefault();
   
     try {
-      // Faz login no Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Faz login no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: formDataSignIn.email,
         password: formDataSignIn.password,
       });
   
-      if (error) throw error;
+      if (authError) throw new Error('Erro no login: ' + authError.message);
   
-      // Busca os dados do usuário na tabela personalizada
+      // Busca o usuário na tabela `usuario` usando o email
       const { data: userInfo, error: userError } = await supabase
-        .from('usuario') // Nome da sua tabela personalizada
-        .select('permissao, username') // Seleciona permissao e username
+        .from('usuario')
+        .select('id, permissao, username') // Inclui o ID da tabela `usuario`
         .eq('email', formDataSignIn.email)
         .single();
   
-      if (userError) throw userError;
+      if (userError || !userInfo) {
+        throw new Error('Usuário não encontrado na tabela `usuario`.');
+      }
   
-      // Atualiza o token com os dados do usuário da tabela personalizada
-      setToken({
-        ...data,
+      // Atualiza o token para incluir o ID da tabela `usuario`
+      const updatedToken = {
+        ...authData,
         user: {
-          ...data.user,
-          role: userInfo.permissao, // Adiciona o papel
-          username: userInfo.username, // Adiciona o username
+          ...authData.user,
+          id_usuario: userInfo.id, // Adiciona o ID da tabela `usuario`
+          role: userInfo.permissao, // Adiciona a permissão
+          username: userInfo.username, // Adiciona o nome de usuário
         },
-      });
+      };
+  
+      sessionStorage.setItem('token', JSON.stringify(updatedToken)); // Salva o token no navegador
+      setToken(updatedToken);
   
       navigate('/home');
     } catch (error) {
       alert(error.message);
     }
   }
+  
+  
   
   
 

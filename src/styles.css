@@ -1107,4 +1107,30 @@ form button:hover {
   background-color: #0056b3;
 }
 
+.comment-item {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  position: relative; /* Necessário para posicionar a data */
+}
 
+.comment-item strong {
+  font-size: 14px;
+  color: #007bff;
+}
+
+.comment-item p {
+  font-size: 14px;
+  color: #333;
+  margin: 5px 0;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #888;
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
+  font-style: italic;
+}

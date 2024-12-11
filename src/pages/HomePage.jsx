@@ -17,9 +17,10 @@ const HomePage = ({ token }) => {
   useEffect(() => {
     if (token?.user) {
       syncUserWithDatabase();
-      fetchPost();
+      
       fetchUserLikes();
     }
+    fetchPost();
   }, [token]);
 
   // Função para sincronizar usuário com a tabela `usuario` apenas quando necessário
@@ -96,16 +97,20 @@ const HomePage = ({ token }) => {
 
   // Função para buscar os likes do usuário
   async function fetchUserLikes() {
+    if (!token || !token.user) return;  // Evita erro se `token.user` não existir
+  
     const { data, error } = await supabase
       .from('likes')
       .select('post_id')
       .eq('user_id', token.user.id);
+  
     if (error) {
       console.error('Erro ao buscar likes do usuário:', error.message);
       return;
     }
     setUserLikes(data.map((like) => like.post_id));
   }
+  
 
   // Função para alternar curtidas
   async function toggleLike(postId) {
@@ -162,6 +167,7 @@ const HomePage = ({ token }) => {
 
   const formatarParaBrasilia = (utcTimestamp) =>
     DateTime.fromISO(utcTimestamp, { zone: 'utc' })
+      .setLocale('pt-BR')  // Define a localidade para PT-BR
       .setZone('America/Sao_Paulo')
       .toLocaleString(DateTime.DATETIME_MED);
 
@@ -177,6 +183,28 @@ const HomePage = ({ token }) => {
     tempDiv.innerHTML = html;
     return tempDiv.textContent || tempDiv.innerText || '';
   }
+
+  // Função para deletar post
+  async function deletarPost(postId, id_usuario_post) {
+    if (token?.user?.id !== id_usuario_post) {
+      alert('Você não tem permissão para deletar este post.');
+      return;
+    }
+  
+    const { error } = await supabase
+      .from('post')
+      .delete()
+      .eq('id_post', postId);
+  
+    if (error) {
+      console.error('Erro ao deletar o post:', error.message);
+      return;
+    }
+    fetchPost();
+  }
+  
+
+
 
   return (
     <div className="containerH">
@@ -260,7 +288,7 @@ const HomePage = ({ token }) => {
                   <FontAwesomeIcon icon={faComment} style={{ marginRight: '5px' }} />
                   {item.quantidade_comentarios || 0}
                 </span>
-                {token?.user?.role === 'admin' && (
+                {token?.user?.role === 'admin' && token?.user?.id === item.id_usuario_post && (
                   <>
                     <button
                       className="button-ed"
@@ -270,7 +298,7 @@ const HomePage = ({ token }) => {
                     </button>
                     <button
                       className="button-ed"
-                      onClick={() => deletarPost(item.id_post)}
+                      onClick={() => deletarPost(item.id_post, item.id_usuario_post)}
                     >
                       Deletar
                     </button>

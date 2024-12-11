@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../client';
+import { DateTime } from 'luxon';
 import '../styles.css';
 
 const PostDetails = () => {
@@ -34,7 +35,7 @@ const PostDetails = () => {
   async function fetchComments() {
     const { data, error } = await supabase
       .from('comments')
-      .select('id, content, user_id, usuario(username)')
+      .select('id, content, user_id, created_at, usuario(username)')
       .eq('post_id', id);
 
     if (error) {
@@ -49,31 +50,18 @@ const PostDetails = () => {
     if (!newComment.trim()) return;
 
     const token = JSON.parse(sessionStorage.getItem('token'));
-    if (!token || !token.user || !token.user.id) {
+    if (!token || !token.user || !token.user.id_usuario) {
       console.error('Usuário não autenticado ou ID do usuário não encontrado.');
       return;
     }
 
-    const userId = token.user.id;
+    const userId = token.user.id_usuario;
 
-    // Verifica se o ID do usuário existe na tabela `usuario`
-    const { data: userExists, error: userError } = await supabase
-      .from('usuario')
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userExists) {
-      console.error('Usuário não encontrado na tabela `usuario`.');
-      return;
-    }
-
-    // Adiciona o comentário na tabela `comments`
     try {
       const { error: insertError } = await supabase.from('comments').insert([
         {
-          post_id: id,
-          user_id: userId,
+          post_id: id, // ID do post
+          user_id: userId, // ID do usuário existente
           content: newComment,
         },
       ]);
@@ -81,7 +69,7 @@ const PostDetails = () => {
       if (insertError) throw insertError;
 
       setNewComment('');
-      fetchComments();
+      fetchComments(); // Atualiza os comentários
     } catch (error) {
       console.error('Erro ao adicionar comentário:', error.message);
     }
@@ -114,6 +102,12 @@ const PostDetails = () => {
                   <div key={comment.id} className="comment-item">
                     <strong>{comment.usuario.username}</strong>
                     <p>{comment.content}</p>
+                    <span className="comment-date">
+                      {DateTime.fromISO(comment.created_at, { zone: 'utc' })
+                        .setLocale('pt-BR')  // Define a localidade para PT-BR
+                        .setZone('America/Sao_Paulo')
+                        .toLocaleString(DateTime.DATETIME_MED_WITH_SECONDS)}
+                    </span>
                   </div>
                 ))}
               </div>
