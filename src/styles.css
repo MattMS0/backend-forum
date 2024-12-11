@@ -1042,3 +1042,69 @@ form button:hover {
 .search-input:focus {
   border-color: #007bff;      /* Cor da borda quando o campo estiver em foco */
 }
+
+
+/* Estilo para as novas páginas */
+.read-more-button {
+  background: none;
+  color: #007bff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.read-more-button:hover {
+  text-decoration: underline;
+  color: #0056b3;
+}
+
+.containerH .contentH {
+  padding: 20px;
+}
+
+/* Estilo para os comentários */
+.comments-section {
+  margin-top: 20px;
+}
+
+.comments-list {
+  margin-bottom: 20px;
+}
+
+.comment-item {
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.comment-item strong {
+  font-size: 14px;
+  color: #007bff;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  resize: none;
+}
+
+.comment-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.comment-button:hover {
+  background-color: #0056b3;
+}
+
+

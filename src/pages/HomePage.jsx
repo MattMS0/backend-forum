@@ -11,13 +11,48 @@ const HomePage = ({ token }) => {
   const [post, setPost] = useState([]);
   const [userLikes, setUserLikes] = useState([]);
   const [searchTerm, setSearchTerm] = useState(''); // Estado para o termo de busca
+  const [postComments, setPostComments] = useState([]);  // Estado para armazenar os comentários dos posts
 
+  // Chama a função de sincronizar o usuário com a tabela `usuario` apenas quando o token muda ou o usuário se autentica
   useEffect(() => {
-    fetchPost();
     if (token?.user) {
+      syncUserWithDatabase();
+      fetchPost();
       fetchUserLikes();
     }
   }, [token]);
+
+  // Função para sincronizar usuário com a tabela `usuario` apenas quando necessário
+  async function syncUserWithDatabase() {
+    const token = JSON.parse(sessionStorage.getItem('token'));  // Recupera o token de autenticação
+    console.log('Token:', token); // Verifique o token para garantir que `user.id` esteja lá
+
+    if (!token || !token.user || !token.user.id) {
+      console.error('Usuário não autenticado ou ID do usuário não encontrado.');
+      return;
+    }
+
+    const userId = token.user.id;  // Recupera o `user.id` do Supabase Auth
+    const username = token.user.username || 'Nome de usuário'; // Assumindo que você tenha `username` no token
+
+    // Adiciona ou atualiza o usuário na tabela `usuario` sem tentar usar `created_at`
+    const { data, error } = await supabase
+      .from('usuario')
+      .upsert([
+        {
+          id: userId,            // O `user.id` do Supabase Auth
+          username: username,    // O nome de usuário
+          email: token.user.email,  // E-mail do usuário
+        }
+      ])
+      .eq('id', userId);  // Condição para garantir que estamos atualizando o usuário correto
+
+    if (error) {
+      console.error('Erro ao sincronizar o usuário com a tabela `usuario`:', error.message);
+    } else {
+      console.log('Usuário sincronizado com sucesso na tabela `usuario`');
+    }
+  }
 
   // Função para buscar os posts
   async function fetchPost() {
@@ -28,12 +63,32 @@ const HomePage = ({ token }) => {
       const { data: likesData, error: likesError } = await supabase.rpc('count_likes');
       if (likesError) throw likesError;
 
-      const postsWithLikes = posts.map((post) => ({
-        ...post,
-        likes: likesData.find((like) => like.post_id === post.id_post)?.like_count || 0,
+      // Buscar comentários para cada post
+      const postIds = posts.map(post => post.id_post);
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('comments')
+        .select('post_id')
+        .in('post_id', postIds);  // Buscar comentários dos posts
+
+      if (commentsError) throw commentsError;
+
+      const postCommentsCount = postIds.map(postId => ({
+        postId,
+        commentsCount: commentsData.filter(comment => comment.post_id === postId).length
       }));
 
-      setPost(postsWithLikes);
+      // Criar um objeto que mapeia postId para a quantidade de comentários
+      const postsWithLikesAndComments = posts.map(post => {
+        const commentsCount = postCommentsCount.find(item => item.postId === post.id_post)?.commentsCount || 0;
+        return {
+          ...post,
+          likes: likesData.find((like) => like.post_id === post.id_post)?.like_count || 0,
+          quantidade_comentarios: commentsCount  // Adicionar a quantidade de comentários ao post
+        };
+      });
+
+      setPost(postsWithLikesAndComments);
+      setPostComments(commentsData); // Atualiza a lista de comentários para a página
     } catch (error) {
       console.error('Erro ao buscar posts:', error.message);
     }
@@ -140,8 +195,8 @@ const HomePage = ({ token }) => {
         <div className="personal-navigationH">
           <h4>NAVEGAÇÃO PESSOAL</h4>
           <ul>
-            {token && <li>Minhas curtidas</li>}
-            {token && <li>Meus comentários</li>}
+            {token && <li onClick={() => navigate('/minhas-curtidas')}>Minhas Curtidas</li>}
+            {token && <li onClick={() => navigate('/meus-comentarios')}>Meus Comentários</li>}
             <li onClick={handleLogout}>Sair</li>
           </ul>
         </div>
@@ -149,7 +204,7 @@ const HomePage = ({ token }) => {
 
       <main className="contentH">
         <header>
-          <h1>Leis</h1>
+          <h1>Posts</h1>
           {token?.user?.role === 'admin' && (
             <button className="add-post-button" onClick={() => navigate('/add')}>
               Adicionar Post
